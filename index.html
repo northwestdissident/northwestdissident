@@ -1335,6 +1335,56 @@
 
         let productsDict = {};
 
+        // SYSTEM URL QUERY ROUTING OTOMATIS (BEBAS DARI HASH '#')
+        window.switchTab = function(tabName, isProductDetail = false, prodId = null, updateUrl = true) {
+            window.currentTab = tabName;
+            
+            if (updateUrl) {
+                const url = new URL(window.location.href);
+                if (isProductDetail && prodId) {
+                    url.searchParams.set('page', 'product');
+                    url.searchParams.set('id', prodId);
+                } else if (tabName === 'home') {
+                    url.searchParams.delete('page');
+                    url.searchParams.delete('id');
+                } else {
+                    url.searchParams.set('page', tabName);
+                    url.searchParams.delete('id');
+                }
+                history.pushState({}, "", url.pathname + url.search);
+            }
+
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const navEl = document.getElementById('nav-' + (isProductDetail ? 'shop' : tabName));
+            if(navEl) navEl.classList.add('active');
+
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            const targetSec = document.getElementById('section-' + tabName);
+            if(targetSec) targetSec.classList.add('active');
+
+            window.scrollTo(0, 0);
+            lucide.createIcons();
+        };
+
+        function handleQueryRouting() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            const id = urlParams.get('id');
+
+            if (!page || page === 'home') {
+                switchTab('home', false, null, false);
+                return;
+            }
+
+            if (page === 'product' && id) {
+                openProductDetailNav(id, false);
+            } else if (['shop', 'zine', 'gallery', 'contact', 'cart', 'checkout', 'confirmation'].includes(page)) {
+                switchTab(page, false, null, false);
+            }
+        }
+
+        window.addEventListener('popstate', handleQueryRouting);
+
         // SYNC REALTIME PRODUK
         onValue(dbRefProducts, (snapshot) => {
             const data = snapshot.val();
@@ -1346,9 +1396,8 @@
             }
             renderProducts();
             renderHomeCarousel();
-            if (activeProductId && productsDict[activeProductId]) {
-                renderProductDetail(activeProductId);
-            }
+            
+            handleQueryRouting();
         });
 
         // SYNC REALTIME GALERI FOTO
@@ -1652,18 +1701,6 @@
             ordersDict = snapshot.val() || {};
             renderAdminOrders();
         });
-
-        window.switchTab = function(tabName) {
-            window.currentTab = tabName;
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            const navEl = document.getElementById('nav-' + tabName);
-            if(navEl) navEl.classList.add('active');
-
-            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-            document.getElementById('section-' + tabName).classList.add('active');
-            window.scrollTo(0, 0);
-            lucide.createIcons();
-        };
 
         // RENDER 4 FOTO DI HALAMAN HOME
         window.renderHomeGalleryGrid = function() {
@@ -2089,11 +2126,11 @@
             }
         };
 
-        window.openProductDetailNav = function(pId) {
+        window.openProductDetailNav = function(pId, updateUrl = true) {
             activeProductId = pId;
             currentImgIndex = 0;
             renderProductDetail(pId);
-            switchTab('product-detail');
+            switchTab('product-detail', true, pId, updateUrl);
         };
 
         function renderProductDetail(pId) {
