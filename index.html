@@ -1334,9 +1334,24 @@
 
         let productsDict = {};
 
-        // TAB SWITCHING DENGAN ROUTING BEBAS MENTAL
+        // PERBAIKAN SISTEM ROUTING DAN TAB SWITCHING
         window.switchTab = function(tabName, isProductDetail = false, prodId = null, updateUrl = true) {
             window.currentTab = tabName;
+
+            if (updateUrl) {
+                const url = new URL(window.location.href);
+                if (isProductDetail && prodId) {
+                    url.searchParams.set('page', 'product');
+                    url.searchParams.set('id', prodId);
+                } else if (tabName === 'home') {
+                    url.searchParams.delete('page');
+                    url.searchParams.delete('id');
+                } else {
+                    url.searchParams.set('page', tabName);
+                    url.searchParams.delete('id');
+                }
+                history.pushState({ page: tabName, id: prodId }, "", url.pathname + url.search);
+            }
 
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             const navEl = document.getElementById('nav-' + (isProductDetail ? 'shop' : tabName));
@@ -1350,16 +1365,37 @@
             lucide.createIcons();
         };
 
-        // Buka Detail Produk Secara Langsung
-        window.openProductDetailNav = function(pId) {
+        // BUKA DETAIL PRODUK LANGSUNG & CEPAT SERTA UPDATE URL SANTAI
+        window.openProductDetailNav = function(pId, updateUrl = true) {
             if (!productsDict[pId]) return;
             activeProductId = pId;
             currentImgIndex = 0;
             renderProductDetail(pId);
-            switchTab('product-detail', true, pId, false);
+            switchTab('product-detail', true, pId, updateUrl);
         };
 
-        // SYNC REALTIME PRODUK
+        // HANDLE URL QUERY LINK DIRECT (E.G. ?page=product&id=p1 ATAU ?page=shop)
+        function handleQueryRouting() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const page = urlParams.get('page');
+            const id = urlParams.get('id');
+
+            if (!page || page === 'home') {
+                switchTab('home', false, null, false);
+            } else if (page === 'product' && id) {
+                if (productsDict[id]) {
+                    openProductDetailNav(id, false);
+                } else {
+                    switchTab('shop', false, null, false);
+                }
+            } else if (['shop', 'zine', 'gallery', 'contact', 'cart', 'checkout', 'confirmation'].includes(page)) {
+                switchTab(page, false, null, false);
+            }
+        }
+
+        window.addEventListener('popstate', handleQueryRouting);
+
+        // SYNC REALTIME PRODUK (JIKA REALTIME TAHAP AWAL MEMUAT, CEK URL DIRECT ROUTE)
         onValue(dbRefProducts, (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -1370,6 +1406,9 @@
             }
             renderProducts();
             renderHomeCarousel();
+            
+            // Cek URL saat pertama kali load untuk membuka detail produk otomatis jika ada parameter ?page=product&id=...
+            handleQueryRouting();
         });
 
         // SYNC REALTIME GALERI FOTO
@@ -1890,7 +1929,7 @@
             document.getElementById('lightboxModal').style.display = 'none';
         };
 
-        // RENDER PRODUK DI HALAMAN SHOP KATALOG (DIREVISI PRESI)
+        // RENDER PRODUK DI KATALOG SHOP
         window.renderProducts = function() {
             const grid = document.getElementById('shopGrid');
             if (!grid) return;
@@ -1937,7 +1976,7 @@
             });
         };
 
-        // RENDER CAROUSEL DI BERANDA (DIREVISI PRESI)
+        // RENDER CAROUSEL PRODUK DI BERANDA
         window.renderHomeCarousel = function() {
             const carousel = document.getElementById('homeShopCarousel');
             if (!carousel) return;
