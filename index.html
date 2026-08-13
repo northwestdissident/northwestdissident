@@ -10,7 +10,7 @@
     <!-- Library Ikon Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Reset & Base Styles (Mode Terang / Light Mode, Kecuali Area Slide Show) */
+        /* Reset & Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -60,6 +60,7 @@
             flex-shrink: 0;
             overflow: hidden;
             position: relative;
+            cursor: pointer;
         }
 
         .logo-box img {
@@ -90,7 +91,7 @@
             text-align: left;
         }
 
-        /* NAVIGASI IKON UTAMA (UKURAN IKON DIPERKECIL SEDIKIT MENJADI 22px, JARAK GAP TETAP 40px) */
+        /* NAVIGASI IKON UTAMA (22px, GAP 40px) */
         .icon-nav {
             background-color: #ffffff;
             border-bottom: none;
@@ -105,7 +106,7 @@
         .nav-container {
             display: flex;
             align-items: center;
-            gap: 40px; /* Jarak tetap tidak diubah */
+            gap: 40px;
         }
 
         .nav-item {
@@ -132,7 +133,6 @@
             box-shadow: none;
         }
 
-        /* Ukuran visual ikon diperkecil sedikit menjadi 22px */
         .nav-item i, .nav-item svg {
             width: 22px !important;
             height: 22px !important;
@@ -156,7 +156,7 @@
             display: block;
         }
 
-        /* AREA KHUSUS SLIDE SHOW */
+        /* AREA KHUSUS SLIDE SHOW HERO */
         .about-hero-box {
             position: relative;
             width: 100vw;
@@ -323,11 +323,11 @@
         .product-card {
             display: flex; flex-direction: column; background-color: #ffffff;
             border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; text-decoration: none;
-            cursor: pointer; height: 100%; transition: transform 0.2s ease;
+            height: 100%; transition: transform 0.2s ease;
         }
 
         .product-card:hover { transform: translateY(-2px); }
-        .product-clickable-area { display: flex; flex-direction: column; height: 100%; }
+        .product-clickable-area { display: flex; flex-direction: column; height: 100%; cursor: pointer; }
 
         .product-image-box {
             width: 100%; aspect-ratio: 1 / 1.1; background-color: #f5f5f5;
@@ -349,8 +349,9 @@
 
         .product-price { font-size: 13px; font-weight: 500; color: #555555; }
 
-        .product-card.unavailable-card { cursor: default; border: 1px solid #e5e5e5; background-color: #f9f9f9; }
+        .product-card.unavailable-card { border: 1px solid #e5e5e5; background-color: #f9f9f9; }
         .product-card.unavailable-card:hover { transform: none; }
+        .product-card.unavailable-card .product-clickable-area { cursor: default; }
 
         .unavailable-img-placeholder {
             width: 100%; height: 100%; background-color: #eeeeee;
@@ -970,7 +971,7 @@
                 <div class="thumbnails">
                     <div class="thumb" id="thumb-btn-0" title="Depan"><img id="thumb-0" src="" alt="Front"></div>
                     <div class="thumb" id="thumb-btn-1" title="Belakang"><img id="thumb-1" src="" alt="Back"></div>
-                    <div class="thumb" id="thumb-btn-2" title="Samping Kanan"><img id="thumb-3" src="" alt="Right"></div>
+                    <div class="thumb" id="thumb-btn-2" title="Samping Kanan"><img id="thumb-2" src="" alt="Right"></div>
                     <div class="thumb" id="thumb-btn-3" title="Samping Kiri"><img id="thumb-3" src="" alt="Left"></div>
                 </div>
 
@@ -1333,24 +1334,9 @@
 
         let productsDict = {};
 
-        // SYSTEM URL QUERY ROUTING OTOMATIS (BEBAS DARI HASH '#')
+        // TAB SWITCHING DENGAN ROUTING BEBAS MENTAL
         window.switchTab = function(tabName, isProductDetail = false, prodId = null, updateUrl = true) {
             window.currentTab = tabName;
-            
-            if (updateUrl) {
-                const url = new URL(window.location.href);
-                if (isProductDetail && prodId) {
-                    url.searchParams.set('page', 'product');
-                    url.searchParams.set('id', prodId);
-                } else if (tabName === 'home') {
-                    url.searchParams.delete('page');
-                    url.searchParams.delete('id');
-                } else {
-                    url.searchParams.set('page', tabName);
-                    url.searchParams.delete('id');
-                }
-                history.pushState({}, "", url.pathname + url.search);
-            }
 
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             const navEl = document.getElementById('nav-' + (isProductDetail ? 'shop' : tabName));
@@ -1364,24 +1350,14 @@
             lucide.createIcons();
         };
 
-        function handleQueryRouting() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const page = urlParams.get('page');
-            const id = urlParams.get('id');
-
-            if (!page || page === 'home') {
-                switchTab('home', false, null, false);
-                return;
-            }
-
-            if (page === 'product' && id) {
-                openProductDetailNav(id, false);
-            } else if (['shop', 'zine', 'gallery', 'contact', 'cart', 'checkout', 'confirmation'].includes(page)) {
-                switchTab(page, false, null, false);
-            }
-        }
-
-        window.addEventListener('popstate', handleQueryRouting);
+        // Buka Detail Produk Secara Langsung
+        window.openProductDetailNav = function(pId) {
+            if (!productsDict[pId]) return;
+            activeProductId = pId;
+            currentImgIndex = 0;
+            renderProductDetail(pId);
+            switchTab('product-detail', true, pId, false);
+        };
 
         // SYNC REALTIME PRODUK
         onValue(dbRefProducts, (snapshot) => {
@@ -1394,8 +1370,6 @@
             }
             renderProducts();
             renderHomeCarousel();
-            
-            handleQueryRouting();
         });
 
         // SYNC REALTIME GALERI FOTO
@@ -1916,6 +1890,7 @@
             document.getElementById('lightboxModal').style.display = 'none';
         };
 
+        // RENDER PRODUK DI HALAMAN SHOP KATALOG (DIREVISI PRESI)
         window.renderProducts = function() {
             const grid = document.getElementById('shopGrid');
             if (!grid) return;
@@ -1962,6 +1937,7 @@
             });
         };
 
+        // RENDER CAROUSEL DI BERANDA (DIREVISI PRESI)
         window.renderHomeCarousel = function() {
             const carousel = document.getElementById('homeShopCarousel');
             if (!carousel) return;
@@ -2122,13 +2098,6 @@
             if (confirm("Yakin ingin menghapus produk ini?")) {
                 remove(ref(db, "storeProductsData/" + pId));
             }
-        };
-
-        window.openProductDetailNav = function(pId, updateUrl = true) {
-            activeProductId = pId;
-            currentImgIndex = 0;
-            renderProductDetail(pId);
-            switchTab('product-detail', true, pId, updateUrl);
         };
 
         function renderProductDetail(pId) {
