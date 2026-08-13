@@ -90,7 +90,7 @@
             text-align: left;
         }
 
-        /* NAVIGASI IKON UTAMA */
+        /* NAVIGASI IKON UTAMA (UKURAN IKON DIPERKECIL SEDIKIT MENJADI 22px, JARAK GAP TETAP 40px) */
         .icon-nav {
             background-color: #ffffff;
             border-bottom: none;
@@ -105,12 +105,12 @@
         .nav-container {
             display: flex;
             align-items: center;
-            gap: 28px;
+            gap: 40px; /* Jarak tetap tidak diubah */
         }
 
         .nav-item {
-            width: 42px;
-            height: 42px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -132,9 +132,10 @@
             box-shadow: none;
         }
 
-        .nav-item i {
-            width: 20px;
-            height: 20px;
+        /* Ukuran visual ikon diperkecil sedikit menjadi 22px */
+        .nav-item i, .nav-item svg {
+            width: 22px !important;
+            height: 22px !important;
         }
 
         /* CONTAINER KONTEN UTAMA */
@@ -372,7 +373,6 @@
         .detail-container { max-width: 480px; margin: 0 auto; text-align: left; }
         .detail-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #e5e5e5; margin-bottom: 16px; }
         
-        /* Tombol Back to Shop */
         .back-to-shop-btn {
             background: none; 
             border: none; 
@@ -425,7 +425,6 @@
         .btn-add-cart { background-color: #ffffff; color: #000000; border: 1px solid #000000; }
         .btn-buy { background-color: #000000; color: #ffffff; }
 
-        /* SEKSI DETAIL TEKS DESKRIPSI PRODUK (RATA KIRI & SEJAJAR) */
         .details-section { 
             border-top: 1px solid #e5e5e5; 
             padding-top: 24px; 
@@ -453,7 +452,6 @@
             margin-bottom: 0;
         }
 
-        /* KUSTOM CHECKBOX */
         .custom-checkbox-wrap {
             display: inline-flex; align-items: center; cursor: pointer; position: relative; user-select: none;
         }
@@ -972,7 +970,7 @@
                 <div class="thumbnails">
                     <div class="thumb" id="thumb-btn-0" title="Depan"><img id="thumb-0" src="" alt="Front"></div>
                     <div class="thumb" id="thumb-btn-1" title="Belakang"><img id="thumb-1" src="" alt="Back"></div>
-                    <div class="thumb" id="thumb-btn-2" title="Samping Kanan"><img id="thumb-2" src="" alt="Right"></div>
+                    <div class="thumb" id="thumb-btn-2" title="Samping Kanan"><img id="thumb-3" src="" alt="Right"></div>
                     <div class="thumb" id="thumb-btn-3" title="Samping Kiri"><img id="thumb-3" src="" alt="Left"></div>
                 </div>
 
@@ -2510,7 +2508,6 @@
                 `;
             });
 
-            // Baris Total Penjumlahan Semua Item di Order Summary
             tbody.innerHTML += `
                 <tr style="border-top: 2px solid #000000;">
                     <td style="font-weight:800; font-size:14px; padding-top:14px;">TOTAL</td>
